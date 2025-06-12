@@ -1,30 +1,45 @@
 #EC2
 resource "aws_instance" "wordpress" {
-  ami                         = "ami-02003f9f0fde924ea" # We're using Ubuntu cloud image 24.04 LTS amd64
+  ami                         = "ami-02003f9f0fde924ea"
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.deployer.key_name
   subnet_id                   = aws_subnet.public1.id
   security_groups             = [aws_security_group.allow_ssh.id]
   associate_public_ip_address = true
 
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y nginx",
-      "echo '<h1>Hello, World!</h1>' | sudo tee /var/www/html/index.html",
-      "sudo systemctl start nginx",
-      "sudo systemctl enable nginx"
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = tls_private_key.my_key.private_key_pem
-      host        = self.public_ip
-      timeout     = "2m"
-    }
+  tags = {
+    Name = "WordPress"
   }
 }
+
+# Provisioning (needs fixing, doesn't work yet)
+# resource "null_resource" "provision_wordpress" {
+#   depends_on = [aws_instance.wordpress]
+#
+#   # Add a delay to give the EC2 instance time to become SSH-ready
+#   provisioner "local-exec" {
+#     command = "sleep 90"
+#   }
+#
+#   provisioner "remote-exec" {
+#     inline = [
+#       "sudo apt-get update",
+#       "sudo apt-get install -y nginx",
+#       "echo '<h1>Hello, World!</h1>' | sudo tee /var/www/html/index.html",
+#       "sudo systemctl start nginx",
+#       "sudo systemctl enable nginx"
+#     ]
+#
+#     connection {
+#       type        = "ssh"
+#       user        = "ubuntu"
+#       private_key = tls_private_key.my_key.private_key_pem
+#       host        = aws_instance.wordpress.public_ip
+#       timeout     = "3m"
+#     }
+#   }
+# }
+
 
 #rds subnet
 resource "aws_db_subnet_group" "rds_subnet_group" {
