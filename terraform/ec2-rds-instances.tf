@@ -18,7 +18,7 @@ resource "aws_instance" "wordpress" {
 #
 #   # Add a delay to give the EC2 instance time to become SSH-ready
 #   provisioner "local-exec" {
-#     command = "sleep 90"
+#     command = "sleep 30"
 #   }
 #
 #   provisioner "remote-exec" {
@@ -35,7 +35,7 @@ resource "aws_instance" "wordpress" {
 #       user        = "ubuntu"
 #       private_key = tls_private_key.my_key.private_key_pem
 #       host        = aws_instance.wordpress.public_ip
-#       timeout     = "3m"
+#       timeout     = "2m"
 #     }
 #   }
 # }
