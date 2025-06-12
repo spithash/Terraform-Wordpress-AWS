@@ -17,10 +17,10 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
 #RDS INSTANCE
 resource "aws_db_instance" "rds_instance" {
   engine                    = "mysql"
-  engine_version            = "5.7.42"
+  engine_version            = "5.7.44"
   skip_final_snapshot       = true
   final_snapshot_identifier = "final-snapshot"
-  instance_class            = "db.t2.micro"
+  instance_class            = "db.t3.micro"
   # I'm using 1GB just to test, we would allocate 20GB to max out.
   allocated_storage      = 1
   identifier             = "rds-instance"
