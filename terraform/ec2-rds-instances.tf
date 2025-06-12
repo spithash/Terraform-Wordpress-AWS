@@ -21,6 +21,7 @@ resource "aws_instance" "wordpress" {
       user        = "ubuntu"
       private_key = tls_private_key.my_key.private_key_pem
       host        = self.public_ip
+      timeout     = "2m"
     }
   }
 }
