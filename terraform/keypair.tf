@@ -14,7 +14,7 @@ resource "null_resource" "save_key_pair" {
   provisioner "local-exec" {
     # By default we do not allow overwriting of the key file (chmod 400). Change this to chmod 600 if you get permission errors (which means you want to overwrite it).
     # Leave it at 400 for production.
-    command = "echo '${tls_private_key.my_key.private_key_pem}' > mysecurekey.pem && chmod 400 mysecurekey.pem"
+    command = "echo '${tls_private_key.my_key.private_key_openssh}' > mysecurekey.pem && chmod 400 mysecurekey.pem"
   }
 }
 
