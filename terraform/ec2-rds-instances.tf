@@ -19,7 +19,7 @@ resource "aws_instance" "wordpress" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file("mysecurekey.pem")
+      private_key = tls_private_key.my_key.private_key_pem
       host        = self.public_ip
     }
   }
