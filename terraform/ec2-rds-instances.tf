@@ -6,6 +6,23 @@ resource "aws_instance" "wordpress" {
   subnet_id                   = aws_subnet.public1.id
   security_groups             = [aws_security_group.allow_ssh.id]
   associate_public_ip_address = true
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y nginx",
+      "echo '<h1>Hello, World!</h1>' | sudo tee /var/www/html/index.html",
+      "sudo systemctl start nginx",
+      "sudo systemctl enable nginx"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("mysecurekey.pem")
+      host        = self.public_ip
+    }
+  }
 }
 
 #rds subnet
