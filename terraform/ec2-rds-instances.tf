@@ -1,6 +1,6 @@
 #EC2
 resource "aws_instance" "wordpress" {
-  ami                         = "ami-053b0d53c279acc90"
+  ami                         = "ami-02003f9f0fde924ea" # We're using Ubuntu cloud image 24.04 LTS amd64
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.deployer.key_name
   subnet_id                   = aws_subnet.public1.id
