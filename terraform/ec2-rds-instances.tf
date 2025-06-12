@@ -21,14 +21,13 @@ resource "aws_db_instance" "rds_instance" {
   skip_final_snapshot       = true
   final_snapshot_identifier = "final-snapshot"
   instance_class            = "db.t3.micro"
-  # I'm using 1GB just to test, we would allocate 20GB to max out.
-  allocated_storage      = 1
-  identifier             = "rds-instance"
-  db_name                = var.db_name
-  username               = var.db_username
-  password               = var.db_password
-  db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
-  vpc_security_group_ids = [aws_security_group.rds_security_group.id]
+  allocated_storage         = 20
+  identifier                = "rds-instance"
+  db_name                   = var.db_name
+  username                  = var.db_username
+  password                  = var.db_password
+  db_subnet_group_name      = aws_db_subnet_group.rds_subnet_group.name
+  vpc_security_group_ids    = [aws_security_group.rds_security_group.id]
 
   tags = {
     Name = "RDS Instance"
