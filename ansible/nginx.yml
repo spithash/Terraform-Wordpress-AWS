@@ -1,0 +1,38 @@
+---
+- name: Install and configure Nginx
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: true
+
+    - name: Write Hello World page
+      copy:
+        dest: /var/www/html/index.nginx-debian.html
+        content: "Hello, World from Ansible!\n"
+
+    - name: Ensure Nginx is started and enabled
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+- name: Test Nginx from local machine
+  hosts: localhost
+  gather_facts: false
+  vars:
+    web_public_ip: "{{ groups['web'][0] }}"
+  tasks:
+    - name: Wait for the web server to respond
+      uri:
+        url: "http://{{ web_public_ip }}"
+        return_content: yes
+      register: curl_result
+
+    - name: Show response content
+      debug:
+        msg: "{{ curl_result.content }}"

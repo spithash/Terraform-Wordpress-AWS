@@ -1,0 +1,17 @@
+- name: Show system facts about disks and memory
+  hosts: web
+  gather_facts: yes
+  tasks:
+    - name: Show memory info
+      debug:
+        msg:
+          - "Total Memory: {{ ansible_memtotal_mb }} MB"
+          - "Free Memory: {{ ansible_memfree_mb }} MB"
+
+    - name: Show mount points
+      debug:
+        var: ansible_mounts
+
+    - name: Show devices info
+      debug:
+        var: ansible_devices
