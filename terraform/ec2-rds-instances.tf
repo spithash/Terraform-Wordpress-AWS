@@ -12,35 +12,6 @@ resource "aws_instance" "wordpress" {
   }
 }
 
-# Provisioning (needs fixing, doesn't work yet)
-# resource "null_resource" "provision_wordpress" {
-#   depends_on = [aws_instance.wordpress]
-#
-#   # Add a delay to give the EC2 instance time to become SSH-ready
-#   provisioner "local-exec" {
-#     command = "sleep 30"
-#   }
-#
-#   provisioner "remote-exec" {
-#     inline = [
-#       "sudo apt-get update",
-#       "sudo apt-get install -y nginx",
-#       "echo '<h1>Hello, World!</h1>' | sudo tee /var/www/html/index.html",
-#       "sudo systemctl start nginx",
-#       "sudo systemctl enable nginx"
-#     ]
-#
-#     connection {
-#       type        = "ssh"
-#       user        = "ubuntu"
-#       private_key = tls_private_key.my_key.private_key_pem
-#       host        = aws_instance.wordpress.public_ip
-#       timeout     = "2m"
-#     }
-#   }
-# }
-
-
 #rds subnet
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "rds-subnet-group"
