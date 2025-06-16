@@ -9,6 +9,6 @@ terraform {
 }
 
 provider "aws" {
-  region  = "eu-central-1"
+  region  = "eu-central-1" # also defined in ../ansible/get_ec2_inventory.yml
   profile = "default"
 }
