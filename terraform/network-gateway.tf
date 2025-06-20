@@ -1,4 +1,4 @@
-#internet gateway
+# Internet Gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.this.id
 
@@ -7,7 +7,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-#public route table
+# Public route table with route to IGW
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
 
@@ -18,6 +18,15 @@ resource "aws_route_table" "public" {
 
   tags = {
     Name = "public-rt"
+  }
+}
+
+# Private route table with no internet gateway route
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.this.id
+
+  tags = {
+    Name = "private-rt"
   }
 }
 

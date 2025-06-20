@@ -1,4 +1,4 @@
-#vpc
+# VPC
 resource "aws_vpc" "this" {
   cidr_block = "10.100.0.0/16"
   tags = {
@@ -6,7 +6,7 @@ resource "aws_vpc" "this" {
   }
 }
 
-#public subnets
+# Public subnets
 resource "aws_subnet" "public1" {
   vpc_id            = aws_vpc.this.id
   cidr_block        = "10.100.1.0/24"
@@ -16,6 +16,7 @@ resource "aws_subnet" "public1" {
     Name = "upgrad-public-1"
   }
 }
+
 resource "aws_subnet" "public2" {
   vpc_id            = aws_vpc.this.id
   cidr_block        = "10.100.2.0/24"
@@ -26,22 +27,24 @@ resource "aws_subnet" "public2" {
   }
 }
 
-#private subnets
-resource "aws_subnet" "private1" {
+# DB subnets / private subnets with no internet route
+resource "aws_subnet" "db_subnet1" {
   vpc_id            = aws_vpc.this.id
   cidr_block        = "10.100.3.0/24"
   availability_zone = "eu-central-1a"
 
   tags = {
-    Name = "upgrad-private-1"
+    Name = "upgrad-db-1"
   }
 }
-resource "aws_subnet" "private2" {
+
+resource "aws_subnet" "db_subnet2" {
   vpc_id            = aws_vpc.this.id
   cidr_block        = "10.100.4.0/24"
   availability_zone = "eu-central-1b"
 
   tags = {
-    Name = "upgrad-private-2"
+    Name = "upgrad-db-2"
   }
 }
+

@@ -1,4 +1,4 @@
-# Route table associations
+# Route table associations for public subnets
 resource "aws_route_table_association" "public1" {
   subnet_id      = aws_subnet.public1.id
   route_table_id = aws_route_table.public.id
@@ -9,17 +9,18 @@ resource "aws_route_table_association" "public2" {
   route_table_id = aws_route_table.public.id
 }
 
-resource "aws_route_table_association" "private1" {
-  subnet_id      = aws_subnet.private1.id
-  route_table_id = aws_route_table.public.id # changed from private.id to public.id
+# Route table associations for db subnets with private route table
+resource "aws_route_table_association" "db_subnet1" {
+  subnet_id      = aws_subnet.db_subnet1.id
+  route_table_id = aws_route_table.private.id
 }
 
-resource "aws_route_table_association" "private2" {
-  subnet_id      = aws_subnet.private2.id
-  route_table_id = aws_route_table.public.id # changed from private.id to public.id
+resource "aws_route_table_association" "db_subnet2" {
+  subnet_id      = aws_subnet.db_subnet2.id
+  route_table_id = aws_route_table.private.id
 }
 
-# Security group allowing SSH and HTTP inbound traffic
+# Security group allowing SSH and HTTP inbound traffic to EC2
 resource "aws_security_group" "allow_ssh" {
   name        = "allow_ssh"
   description = "Allow SSH inbound traffic"

@@ -1,4 +1,4 @@
-#EC2
+# EC2 Instance in public subnet
 resource "aws_instance" "wordpress" {
   ami                         = "ami-02003f9f0fde924ea"
   instance_type               = "t2.micro"
@@ -12,13 +12,13 @@ resource "aws_instance" "wordpress" {
   }
 }
 
-#rds subnet
+# RDS Subnet Group using db subnets
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "rds-subnet-group"
-  subnet_ids = [aws_subnet.private1.id, aws_subnet.private2.id]
+  subnet_ids = [aws_subnet.db_subnet1.id, aws_subnet.db_subnet2.id]
 }
 
-#RDS INSTANCE
+# RDS Instance inside private (db) subnets
 resource "aws_db_instance" "rds_instance" {
   engine                    = "mysql"
   engine_version            = "5.7.44"
@@ -38,7 +38,7 @@ resource "aws_db_instance" "rds_instance" {
   }
 }
 
-# RDS security group
+# RDS Security Group
 resource "aws_security_group" "rds_security_group" {
   name        = "rds-security-group"
   description = "Security group for RDS instance"
@@ -48,10 +48,11 @@ resource "aws_security_group" "rds_security_group" {
     from_port   = 3306
     to_port     = 3306
     protocol    = "tcp"
-    cidr_blocks = ["10.100.0.0/16"]
+    cidr_blocks = ["10.100.0.0/16"] # allows access from whole VPC
   }
 
   tags = {
     Name = "RDS Security Group"
   }
 }
+
