@@ -13,7 +13,7 @@
     - name: Write Hello World page
       copy:
         dest: /var/www/html/index.nginx-debian.html
-        content: "Hello, World from Ansible!\n"
+        content: "Hello World from Ansible!\n"
 
     - name: Ensure Nginx is started and enabled
       service:
