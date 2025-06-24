@@ -27,24 +27,3 @@ resource "aws_subnet" "public2" {
   }
 }
 
-# DB subnets / private subnets with no internet route
-resource "aws_subnet" "db_subnet1" {
-  vpc_id            = aws_vpc.this.id
-  cidr_block        = "10.100.3.0/24"
-  availability_zone = "eu-central-1a"
-
-  tags = {
-    Name = "upgrad-db-1"
-  }
-}
-
-resource "aws_subnet" "db_subnet2" {
-  vpc_id            = aws_vpc.this.id
-  cidr_block        = "10.100.4.0/24"
-  availability_zone = "eu-central-1b"
-
-  tags = {
-    Name = "upgrad-db-2"
-  }
-}
-
