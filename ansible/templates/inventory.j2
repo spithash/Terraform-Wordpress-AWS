@@ -1,0 +1,10 @@
+all:
+  children:
+    web:
+      hosts:
+{% for instance in ec2_info.instances %}
+        {{ instance.public_ip_address }}:
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: ../terraform/mysecurekey.pem
+{% endfor %}
+
