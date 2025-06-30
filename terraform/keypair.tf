@@ -1,18 +1,32 @@
-# Generate Ed25519 private key
+provider "tls" {}
+
+provider "vault" {
+  address = var.vault_addr
+  token   = var.vault_token
+}
+
+# Step 1: Generate SSH Key
 resource "tls_private_key" "my_key" {
   algorithm = "ED25519"
 }
 
-# Create AWS key pair with the generated public key
+# Step 2: Create AWS Key Pair
 resource "aws_key_pair" "deployer" {
-  key_name   = "myrandomkeyname"
+  key_name   = "wordpress-key-${random_id.suffix.hex}"
   public_key = tls_private_key.my_key.public_key_openssh
 }
 
-# Save private key locally for SSH access
-resource "null_resource" "save_key_pair" {
-  provisioner "local-exec" {
-    command = "echo '${tls_private_key.my_key.private_key_openssh}' > mysecurekey.pem && chmod 600 mysecurekey.pem"
-  }
+# Random suffix to avoid name collisions
+resource "random_id" "suffix" {
+  byte_length = 4
+}
+
+# Step 3: Store private key in Vault
+resource "vault_kv_secret_v2" "ssh_key" {
+  mount = "wordpress_deployment"
+  name  = "terraform/ssh/my_key"
+  data_json = jsonencode({
+    private_key = tls_private_key.my_key.private_key_pem
+  })
 }
 
