@@ -5,6 +5,8 @@ ansible-playbook main.yml
 
 ```
 
+### Start provisioning
+
 ```
 ansible-playbook nginx.yml
 
