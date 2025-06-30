@@ -12,8 +12,11 @@ ansible-playbook nginx.yml
 
 ### Ansible collection requirements
 
+``
+
 - amazon.aws 10.1.0
-- community.hashi_vault 6.2.0`
+- community.hashi_vault 6.2.0
+  ``
 
 ### Install requirements
 
