@@ -22,5 +22,5 @@ ansible-playbook nginx.yml
 ### Install requirements
 
 ```bash
-ansible-galaxy collection install community.hashi_vault amazon.aws
+ansible-galaxy collection install community.hashi_vault amazon.aws community.mysql
 ```
