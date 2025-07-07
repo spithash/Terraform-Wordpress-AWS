@@ -1,0 +1,46 @@
+- name: Install and configure MariaDB
+  hosts: web
+  become: true
+
+  vars:
+    wp_db_name: wordpress
+    wp_db_user: wp_user
+    wp_db_password: strong_password
+
+  collections:
+    - community.mysql
+
+  tasks:
+    - name: Install MariaDB and python3-mysqldb
+      apt:
+        name:
+          - mariadb-server
+          - python3-mysqldb
+        state: present
+        update_cache: yes
+
+    - name: Ensure MariaDB is started and enabled
+      service:
+        name: mariadb
+        state: started
+        enabled: true
+
+    - name: Create WordPress database
+      mysql_db:
+        name: "{{ wp_db_name }}"
+        state: present
+
+    - name: Create WordPress DB user
+      mysql_user:
+        name: "{{ wp_db_user }}"
+        password: "{{ wp_db_password }}"
+        priv: "{{ wp_db_name }}.*:ALL"
+        host: "%"
+        state: present
+
+    - name: Show WordPress database credentials
+      debug:
+        msg:
+          - "WordPress Database Name: {{ wp_db_name }}"
+          - "WordPress Database User: {{ wp_db_user }}"
+          - "WordPress Database Password: {{ wp_db_password }}"
