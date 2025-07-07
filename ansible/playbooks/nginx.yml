@@ -4,16 +4,61 @@
   become: true
 
   tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: true
+
     - name: Install Nginx
       apt:
         name: nginx
         state: present
-        update_cache: true
 
-    - name: Write Hello World page
+    - name: Copy Nginx config for WordPress site with PHP support
       copy:
-        dest: /var/www/html/index.nginx-debian.html
-        content: "Hello World from Ansible!\n"
+        dest: /etc/nginx/sites-available/wordpress
+        content: |
+          server {
+              listen 80;
+              server_name _;
+              root /var/www/html;
+
+              index index.php index.html index.htm;
+
+              location / {
+                  try_files $uri $uri/ /index.php?$args;
+              }
+
+              location ~ \.php$ {
+                  include snippets/fastcgi-php.conf;
+                  fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+              }
+
+              location ~ /\.ht {
+                  deny all;
+              }
+          }
+      notify: Reload Nginx
+
+    - name: Enable WordPress site config
+      file:
+        src: /etc/nginx/sites-available/wordpress
+        dest: /etc/nginx/sites-enabled/wordpress
+        state: link
+        force: yes
+
+    - name: Remove default site config if present
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      notify: Reload Nginx
+
+    - name: Create PHP info page for testing
+      copy:
+        dest: /var/www/html/phpinfo.php
+        content: "<?php phpinfo(); ?>"
+        owner: www-data
+        group: www-data
+        mode: "0644"
 
     - name: Ensure Nginx is started and enabled
       service:
@@ -21,18 +66,8 @@
         state: started
         enabled: true
 
-- name: Test Nginx from local machine
-  hosts: localhost
-  gather_facts: false
-  vars:
-    web_public_ip: "{{ groups['web'][0] }}"
-  tasks:
-    - name: Wait for the web server to respond
-      uri:
-        url: "http://{{ web_public_ip }}"
-        return_content: yes
-      register: curl_result
-
-    - name: Show response content
-      debug:
-        msg: "{{ curl_result.content }}"
+  handlers:
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded
