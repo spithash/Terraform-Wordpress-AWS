@@ -1,0 +1,31 @@
+---
+- name: Install PHP 8.4 and PHP-FPM
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Add PHP repository (Ondřej Surý PPA)
+      apt_repository:
+        repo: ppa:ondrej/php
+        state: present
+        update_cache: yes
+
+    - name: Install PHP 8.4, PHP-FPM and required extensions
+      apt:
+        name:
+          - php8.4
+          - php8.4-fpm
+          - php8.4-mysql
+          - php8.4-curl
+          - php8.4-gd
+          - php8.4-mbstring
+          - php8.4-xml
+          - php8.4-zip
+        state: present
+        update_cache: yes
+
+    - name: Ensure PHP-FPM is started and enabled
+      service:
+        name: php8.4-fpm
+        state: started
+        enabled: true
