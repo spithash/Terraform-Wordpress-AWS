@@ -1,0 +1,15 @@
+---
+- name: Reload Nginx and PHP-FPM services
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded
+
+    - name: Reload PHP-FPM
+      service:
+        name: php8.4-fpm
+        state: reloaded
