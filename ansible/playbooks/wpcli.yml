@@ -1,0 +1,37 @@
+- name: Install WP-CLI
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Download WP-CLI
+      get_url:
+        url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        dest: /usr/local/bin/wp
+        mode: "0755"
+
+    - name: Verify WP-CLI
+      command: wp --info
+
+    - name: Download WordPress
+      command: wp core download --path=/var/www/html --allow-root
+
+    - name: Create wp-config.php
+      command: >
+        wp config create
+        --dbname=wordpress
+        --dbuser=wp_user
+        --dbpass=strong_password
+        --dbhost=localhost
+        --path=/var/www/html
+        --allow-root
+
+    - name: Install WordPress
+      command: >
+        wp core install
+        --url=http://{{ ansible_host }}
+        --title="My WP Site"
+        --admin_user=admin
+        --admin_password=superstrongpassword
+        --admin_email=you@example.com
+        --path=/var/www/html
+        --allow-root

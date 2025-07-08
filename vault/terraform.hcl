@@ -1,14 +1,29 @@
-# Let Terraform create, update, read, and delete the SSH keys stored here
+# --- SSH key permissions ---
+
+# Allow Terraform to manage SSH keys
 path "wordpress_deployment/data/terraform/ssh/*" {
   capabilities = ["create", "update", "read", "delete"]
 }
 
-# Allow Terraform to check info about the stored keys — like versions and metadata
+# Allow Terraform to read and list metadata for SSH keys
 path "wordpress_deployment/metadata/terraform/ssh/*" {
   capabilities = ["read", "list"]
 }
 
-# Let Terraform create new tokens when it needs them during its workflow
+# --- MySQL credentials permissions (for Ansible via Terraform token) ---
+
+# Allow Terraform (and Ansible using this token) to manage MySQL credentials
+path "wordpress_deployment/data/mysql/*" {
+  capabilities = ["create", "update", "read", "delete"]
+}
+
+# Allow reading/listing MySQL credential metadata
+path "wordpress_deployment/metadata/mysql/*" {
+  capabilities = ["read", "list"]
+}
+
+# --- Token creation (needed by Terraform during provisioning) ---
+
 path "auth/token/create" {
   capabilities = ["update"]
 }

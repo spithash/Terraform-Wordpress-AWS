@@ -1,46 +1,93 @@
-- name: Install and configure MariaDB
-  hosts: web
+---
+- name: Install and configure MariaDB with socket auth and Vault storage
+  hosts: all
   become: true
-
   vars:
-    wp_db_name: wordpress
-    wp_db_user: wp_user
-    wp_db_password: strong_password
+    vault_path: "wordpress_deployment/data/mysql/credentials"
+    vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
+    vault_url: "http://127.0.0.1:8200"
 
-  collections:
-    - community.mysql
+  pre_tasks:
+    - name: Check Vault connectivity and token validity (run on control node)
+      community.hashi_vault.vault_read:
+        url: "{{ vault_url }}"
+        token: "{{ vault_token }}"
+        path: "{{ vault_path }}"
+      delegate_to: localhost
+      register: vault_status
+      failed_when: vault_status.failed or
+        vault_status.data is not defined or
+        vault_status.data.data is not defined
+      changed_when: false
 
   tasks:
-    - name: Install MariaDB and python3-mysqldb
+    - name: Install required OS packages including python3-hvac and MariaDB
       apt:
         name:
           - mariadb-server
-          - python3-mysqldb
+          - python3-pymysql
+          - python3-hvac
+          - python3-apt
         state: present
         update_cache: yes
 
+    - name: Configure MariaDB to bind only to socket (disable TCP/IP)
+      blockinfile:
+        path: /etc/mysql/mariadb.conf.d/50-server.cnf
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+        block: |
+          bind-address = 127.0.0.1
+          skip-networking
+      notify: Restart MariaDB
+
     - name: Ensure MariaDB is started and enabled
-      service:
+      systemd:
         name: mariadb
         state: started
         enabled: true
 
-    - name: Create WordPress database
-      mysql_db:
-        name: "{{ wp_db_name }}"
-        state: present
+    - name: Generate random DB name (wordpress_dbXXX)
+      set_fact:
+        db_name: "wordpress_db{{ lookup('password', '/dev/null length=3 chars=digits') }}"
 
-    - name: Create WordPress DB user
-      mysql_user:
-        name: "{{ wp_db_user }}"
-        password: "{{ wp_db_password }}"
-        priv: "{{ wp_db_name }}.*:ALL"
-        host: "%"
-        state: present
+    - name: Generate random DB username (user_XXXXXX)
+      set_fact:
+        db_user: "user_{{ lookup('password', '/dev/null length=6 chars=ascii_lowercase') }}"
 
-    - name: Show WordPress database credentials
-      debug:
-        msg:
-          - "WordPress Database Name: {{ wp_db_name }}"
-          - "WordPress Database User: {{ wp_db_user }}"
-          - "WordPress Database Password: {{ wp_db_password }}"
+    - name: Generate strong random password for DB user
+      set_fact:
+        db_password: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}"
+
+    - name: Create WordPress database (socket auth, no root password)
+      community.mysql.mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Create WordPress DB user with privileges
+      community.mysql.mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        priv: "{{ db_name }}.*:ALL"
+        state: present
+        login_user: root
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Store DB credentials in Vault KV v2
+      community.hashi_vault.vault_write:
+        url: "{{ vault_url }}"
+        token: "{{ vault_token }}"
+        path: "{{ vault_path }}"
+        data:
+          data:
+            username: "{{ db_user }}"
+            password: "{{ db_password }}"
+            db_name: "{{ db_name }}"
+      delegate_to: localhost
+
+  handlers:
+    - name: Restart MariaDB
+      systemd:
+        name: mariadb
+        state: restarted
