@@ -9,6 +9,7 @@
 
   pre_tasks:
     - name: Check Vault connectivity and token validity (run on control node)
+      become: false
       community.hashi_vault.vault_read:
         url: "{{ vault_url }}"
         token: "{{ vault_token }}"
@@ -75,6 +76,7 @@
         login_unix_socket: /var/run/mysqld/mysqld.sock
 
     - name: Store DB credentials in Vault KV v2
+      become: false
       community.hashi_vault.vault_write:
         url: "{{ vault_url }}"
         token: "{{ vault_token }}"
