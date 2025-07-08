@@ -29,4 +29,21 @@ resource "vault_kv_secret_v2" "ssh_key" {
     private_key = tls_private_key.my_key.private_key_pem
   })
 }
+resource "vault_kv_secret_v2" "mysql_credentials" {
+  mount = "wordpress_deployment"
+  name  = "mysql/credentials"
+  data_json = jsonencode({
+    username = "mysql_user"
+    password = "mysql_password"
+  })
+}
+
+resource "vault_kv_secret_v2" "wordpress_credentials" {
+  mount = "wordpress_deployment"
+  name  = "wordpress/credentials"
+  data_json = jsonencode({
+    username = "wordpress_user"
+    password = "wordpress_password"
+  })
+}
 
