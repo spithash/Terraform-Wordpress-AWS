@@ -22,6 +22,16 @@ path "wordpress_deployment/metadata/mysql/*" {
   capabilities = ["read", "list"]
 }
 
+# Allow Terraform (and Ansible using this token) to manage WordPress credentials
+path "wordpress_deployment/data/wordpress/*" {
+  capabilities = ["create", "update", "read", "delete"]
+}
+
+# Allow reading/listing WordPress credential metadata
+path "wordpress_deployment/metadata/wordpress/*" {
+  capabilities = ["read", "list"]
+}
+
 # --- Token creation (needed by Terraform during provisioning) ---
 
 path "auth/token/create" {

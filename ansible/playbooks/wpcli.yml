@@ -1,37 +1,106 @@
-- name: Install WP-CLI
-  hosts: web
+---
+- name: Install WordPress using WP-CLI and Vault credentials
+  hosts: all
   become: true
 
+  vars:
+    vault_path: "wordpress_deployment/data/mysql/credentials"
+    vault_wp_path: "wordpress_deployment/data/wordpress/credentials"
+    vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
+    vault_url: "http://127.0.0.1:8200"
+
+  pre_tasks:
+    - name: Check Vault connectivity and read MySQL credentials
+      become: false
+      community.hashi_vault.vault_read:
+        url: "{{ vault_url }}"
+        token: "{{ vault_token }}"
+        path: "{{ vault_path }}"
+      delegate_to: localhost
+      register: vault_mysql_creds
+      failed_when: vault_mysql_creds.failed or
+        vault_mysql_creds.data is not defined or
+        vault_mysql_creds.data.data is not defined
+      changed_when: false
+
   tasks:
+    - name: Install WP-CLI prerequisites
+      apt:
+        name:
+          - curl
+          - php-cli
+          - php-mysql
+        state: present
+        update_cache: yes
+
+    - name: Download WP-CLI phar if not exists
+      stat:
+        path: /usr/local/bin/wp
+      register: wpcli_stat
+
     - name: Download WP-CLI
       get_url:
         url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
         dest: /usr/local/bin/wp
         mode: "0755"
+      when: not wpcli_stat.stat.exists
 
-    - name: Verify WP-CLI
-      command: wp --info
+    - name: Ensure /var/www/html directory exists and owned by www-data
+      file:
+        path: /var/www/html
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: "0755"
 
-    - name: Download WordPress
+    - name: Download WordPress core if not present
       command: wp core download --path=/var/www/html --allow-root
+      args:
+        creates: /var/www/html/wp-config-sample.php
 
-    - name: Create wp-config.php
+    - name: Generate random WordPress admin username
+      set_fact:
+        wp_admin_user: "wp_user_{{ lookup('password', '/dev/null length=6 chars=ascii_lowercase') }}"
+
+    - name: Generate random WordPress admin password
+      set_fact:
+        wp_admin_password: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}"
+
+    - name: Check if wp-config.php exists
+      stat:
+        path: /var/www/html/wp-config.php
+      register: wp_config_stat
+
+    - name: Create wp-config.php with Vault DB credentials
       command: >
         wp config create
-        --dbname=wordpress
-        --dbuser=wp_user
-        --dbpass=strong_password
-        --dbhost=localhost
         --path=/var/www/html
+        --dbname={{ vault_mysql_creds.data.data.data.db_name }}
+        --dbuser={{ vault_mysql_creds.data.data.data.username }}
+        --dbpass={{ vault_mysql_creds.data.data.data.password }}
+        --dbhost=localhost
         --allow-root
+      when: not wp_config_stat.stat.exists
 
-    - name: Install WordPress
+    - name: Install WordPress using generated admin user and password
       command: >
         wp core install
-        --url=http://{{ ansible_host }}
-        --title="My WP Site"
-        --admin_user=admin
-        --admin_password=superstrongpassword
-        --admin_email=you@example.com
         --path=/var/www/html
+        --url=http://{{ ansible_host }}
+        --title="My WordPress Site"
+        --admin_user={{ wp_admin_user }}
+        --admin_password={{ wp_admin_password }}
+        --admin_email=admin@example.com
         --allow-root
+
+    - name: Store WordPress admin credentials in Vault KV v2
+      become: false
+      community.hashi_vault.vault_write:
+        url: "{{ vault_url }}"
+        token: "{{ vault_token }}"
+        path: "{{ vault_wp_path }}"
+        data:
+          data:
+            admin_user: "{{ wp_admin_user }}"
+            admin_password: "{{ wp_admin_password }}"
+      delegate_to: localhost
