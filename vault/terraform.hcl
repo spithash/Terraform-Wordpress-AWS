@@ -1,4 +1,7 @@
-# --- SSH key permissions ---
+# Allow listing all metadata under wordpress_deployment root (needed for UI folder listing)
+path "wordpress_deployment/metadata/*" {
+  capabilities = ["list"]
+}
 
 # Allow Terraform to manage SSH keys
 path "wordpress_deployment/data/terraform/ssh/*" {

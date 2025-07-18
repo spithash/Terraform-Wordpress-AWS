@@ -3,7 +3,8 @@
   hosts: all
   become: true
   vars:
-    vault_path: "wordpress_deployment/data/mysql/credentials"
+    vault_mount_point: "wordpress_deployment"
+    vault_path: "mysql/credentials" # path inside the KV mount (no /data/ prefix)
     vault_token: "{{ lookup('env', 'VAULT_TOKEN') }}"
     vault_url: "http://127.0.0.1:8200"
 
@@ -13,7 +14,7 @@
       community.hashi_vault.vault_read:
         url: "{{ vault_url }}"
         token: "{{ vault_token }}"
-        path: "{{ vault_path }}"
+        path: "{{ vault_mount_point }}/data/{{ vault_path }}"
       delegate_to: localhost
       register: vault_status
       failed_when: vault_status.failed or
@@ -80,7 +81,7 @@
       community.hashi_vault.vault_write:
         url: "{{ vault_url }}"
         token: "{{ vault_token }}"
-        path: "{{ vault_path }}"
+        path: "{{ vault_mount_point }}/data/{{ vault_path }}"
         data:
           data:
             username: "{{ db_user }}"
